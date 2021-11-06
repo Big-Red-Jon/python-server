@@ -65,13 +65,10 @@ class HandleRequests(BaseHTTPRequestHandler):
     # Here's a method on the class that overrides the parent's method.
     # It handles any GET request.
     def do_GET(self):
-        # Set the response code to 'Ok'
         self._set_headers(200)
 
-        response = {}  # Default response
+        response = {}
 
-        # Parse the URL and capture the tuple that is returned
-        (resource, id) = self.parse_url(self.path)
         # Parse URL and store entire tuple in a variable
         parsed = self.parse_url(self.path)
 
@@ -91,74 +88,34 @@ class HandleRequests(BaseHTTPRequestHandler):
                     response = f"{get_single_customer(id)}"
                 else:
                     response = f"{get_all_customers()}"
+            elif resource == "employees":
+                if id is not None:
+                    response = f"{get_single_employee(id)}"
+                else:
+                    response = f"{get_all_employees()}"
+            elif resource == "locations":
+                if id is not None:
+                    response = f"{get_single_location(id)}"
+                else:
+                    response = f"{get_all_locations()}"
 
-            # Response from parse_url() is a tuple with 3
-            # items in it, which means the request was for
-            # `/resource?parameter=value`
-            elif len(parsed) == 3:
-                (resource, key, value) = parsed
+        # Response from parse_url() is a tuple with 3
+        # items in it, which means the request was for
+        # `/resource?parameter=value`
+        elif len(parsed) == 3:
+            (resource, key, value) = parsed
 
-                # Is the resource `customers` and was there a
+            # Is the resource `customers` and was there a
             # query parameter that specified the customer
             # email as a filtering value?
             if key == "email" and resource == "customers":
                 response = get_customers_by_email(value)
 
-        if resource == "animals":
-            if id is not None:
-                response = f"{get_single_animal(id)}"
-            else:
-                response = f"{get_all_animals()}"
-        if resource == "customers":
-            if id is not None:
-                response = f"{get_single_customer(id)}"
-            else:
-                response = f"{get_all_customers()}"
-
-        if resource == "locations":
-            if id is not None:
-                response = f"{get_single_location(id)}"
-            else:
-                response = f"{get_all_locations()}"
-
-        if resource == "employees":
-            if id is not None:
-                response = f"{get_single_employee(id)}"
-            else:
-                response = f"{get_all_employees()}"
-
-        self.wfile.write(response.encode())
-
-        # Your new console.log() that outputs to the terminal
-        print(self.path)
-
-        # It's an if..else statement
-
-        if self.path == "/animals":
-            response = get_all_animals()
-        else:
-            response = []
-
-        if self.path == "/locations":
-            response = get_all_locations()
-        else:
-            response = []
-
-        if self.path == "/employees":
-            response = get_all_employees()
-        else:
-            response = []
-
-        if self.path == "/customers":
-            response = get_all_customers()
-        else:
-            response = []
-
-        # This weird code sends a response back to the client
         self.wfile.write(f"{response}".encode())
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any POST request.
+
     def do_POST(self):
         self._set_headers(201)
         content_len = int(self.headers.get('content-length', 0))

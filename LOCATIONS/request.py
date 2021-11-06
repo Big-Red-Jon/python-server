@@ -1,3 +1,5 @@
+from models import Location
+
 LOCATIONS = [
 
 

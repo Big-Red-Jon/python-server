@@ -20,10 +20,10 @@ def get_all_animals():
         SELECT
             a.id,
             a.name,
-            a.breed,
             a.status,
-            a.location_id,
-            a.customer_id
+            a.breed,
+            a.customer_id,
+            a.location_id
         FROM animal a
         """)
 
@@ -40,9 +40,9 @@ def get_all_animals():
             # Note that the database fields are specified in
             # exact order of the parameters defined in the
             # Animal class above.
-            animal = Animal(row['id'], row['name'], row['breed'],
-                            row['status'], row['location_id'],
-                            row['customer_id'])
+            animal = Animal(row['id'], row['name'], row['status'],
+                            row['breed'],
+                            row['customer_id'], row['location_id'])
 
             animals.append(animal.__dict__)
 
@@ -63,10 +63,10 @@ def get_single_animal(id):
         SELECT
             a.id,
             a.name,
-            a.breed,
             a.status,
-            a.location_id,
-            a.customer_id
+            a.breed,
+            a.customer_id,
+            a.location_id
         FROM animal a
         WHERE a.id = ?
         """, (id, ))
@@ -76,8 +76,9 @@ def get_single_animal(id):
 
         # Create an animal instance from the current row
         animal = Animal(data['id'], data['name'], data['breed'],
-                        data['status'], data['location_id'],
-                        data['customer_id'])
+                        data['status'], data['customer_id'],
+                        data['location_id'],
+                        )
 
         return json.dumps(animal.__dict__)
 
@@ -99,21 +100,30 @@ def create_animal(animal):
     return animal
 
 
+# def delete_animal(id):
+#     # Initial -1 value for animal index, in case one isn't found
+#     animal_index = -1
+
+#     # Iterate the ANIMALS list, but use enumerate() so that you
+#     # can access the index value of each item
+#     for index, animal in enumerate(ANIMALS):
+#         if animal["id"] == id:
+#             # Found the animal. Store the current index.
+#             animal_index = index
+
+#     # If the animal was found, use pop(int) to remove it from list
+#     if animal_index >= 0:
+
+#         ANIMALS.pop(animal_index)
+
 def delete_animal(id):
-    # Initial -1 value for animal index, in case one isn't found
-    animal_index = -1
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    # Iterate the ANIMALS list, but use enumerate() so that you
-    # can access the index value of each item
-    for index, animal in enumerate(ANIMALS):
-        if animal["id"] == id:
-            # Found the animal. Store the current index.
-            animal_index = index
-
-    # If the animal was found, use pop(int) to remove it from list
-    if animal_index >= 0:
-
-        ANIMALS.pop(animal_index)
+        db_cursor.execute("""
+        DELETE FROM animal
+        WHERE id = ?
+        """, (id, ))
 
 
 def update_animal(id, new_animal):
