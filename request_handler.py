@@ -30,7 +30,6 @@ class HandleRequests(BaseHTTPRequestHandler):
             value = pair[1]  # 'jenna@solis.com'
 
             return (resource, key, value)
-
         # No query string parameter
         else:
             id = None
@@ -110,7 +109,7 @@ class HandleRequests(BaseHTTPRequestHandler):
             if key == "email" and resource == "customers":
                 response = get_customers_by_email(value)
 
-            if key == "location" and resource == "animals":
+            if key == "location_id" and resource == "animals":
                 response = get_animals_by_location(value)
 
         self.wfile.write(f"{response}".encode())
