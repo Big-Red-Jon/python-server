@@ -1,5 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from ANIMALS import get_all_animals, get_single_animal, create_animal, delete_animal, update_animal
+from ANIMALS import get_all_animals, get_single_animal, create_animal, delete_animal, update_animal, get_animals_by_location
 from EMPLOYEES.request import get_all_employees, get_single_employee
 from LOCATIONS import get_all_locations, get_single_location, create_location
 from CUSTOMERS import get_all_customers, get_single_customer, get_customers_by_email
@@ -104,12 +104,14 @@ class HandleRequests(BaseHTTPRequestHandler):
         # `/resource?parameter=value`
         elif len(parsed) == 3:
             (resource, key, value) = parsed
-
             # Is the resource `customers` and was there a
             # query parameter that specified the customer
             # email as a filtering value?
             if key == "email" and resource == "customers":
                 response = get_customers_by_email(value)
+
+            if key == "location" and resource == "animals":
+                response = get_animals_by_location(value)
 
         self.wfile.write(f"{response}".encode())
 
@@ -145,7 +147,6 @@ class HandleRequests(BaseHTTPRequestHandler):
     # It handles any PUT request.
 
     def do_PUT(self):
-        self._set_headers(204)
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
@@ -153,11 +154,17 @@ class HandleRequests(BaseHTTPRequestHandler):
         # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Delete a single animal from the list
-        if resource == "animals":
-            update_animal(id, post_body)
+        success = False
 
-        # Encode the new animal and send in response
+        if resource == "animals":
+            success = update_animal(id, post_body)
+        # rest of the elif's
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
         self.wfile.write("".encode())
 
     def do_DELETE(self):

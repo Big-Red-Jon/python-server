@@ -2,38 +2,83 @@ import sqlite3
 import json
 from models import Customer
 
-
 CUSTOMERS = [
-
 ]
 
 
 def get_all_customers():
-    return CUSTOMERS
-
-
-def get_single_customer(id):
-    # Variable to hold the found customer, if it exists
-    requested_customer = None
-
-    # Iterate the ANIMALS list above. Very similar to the
-    # for..of loops you used in JavaScript.
-    for customer in CUSTOMERS:
-        # Dictionaries in Python use [] notation to find a key
-        # instead of the dot notation that JavaScript used.
-        if customer["id"] == id:
-            requested_customer = customer
-
-    return requested_customer
-
-
-def get_customers_by_email(email):
-
     with sqlite3.connect("./kennel.db") as conn:
         conn.row_factory = sqlite3.Row
         db_cursor = conn.cursor()
+        db_cursor.execute("""
+        SELECT
+            c.id,
+            c.name,
+            c.address,
+            c.email,
+            c.password
+        FROM customer c
+        """)
+        customers = []
+        dataset = db_cursor.fetchall()
+        for row in dataset:
+            customer = Customer(row['id'], row['name'], row['address'],
+                                row['email'],
+                                row['password'])
 
-        # Write the SQL query to get the information you want
+            customers.append(customer.__dict__)
+    return json.dumps(customers)
+
+
+def get_single_customer(id):
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
+        db_cursor.execute("""
+        SELECT
+            c.id,
+            c.name,
+            c.address,
+            c.email,
+            c.password
+        FROM customer c
+        WHERE c.id = ?
+        """, (id, ))
+        data = db_cursor.fetchone()
+        customer = Customer(data['id'], data['name'], data['address'],
+                            data['email'],
+                            data['password'])
+        return json.dumps(customer.__dict__)
+
+
+def create_customer(customer):
+    max_id = CUSTOMERS[-1]["id"]
+    new_id = max_id + 1
+    customer["id"] = new_id
+    CUSTOMERS.append(customer)
+    return customer
+
+
+def delete_customer(id):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
+        db_cursor.execute("""
+        DELETE FROM animal
+        WHERE id = ?
+        """, (id, ))
+
+
+def update_customer(id, new_customer):
+    for index, customer in enumerate(CUSTOMERS):
+        if customer["id"] == id:
+            CUSTOMERS[index] = new_customer
+            break
+
+
+def get_customers_by_email(email):
+    with sqlite3.connect("./kennel.db") as conn:
+        conn.row_factory = sqlite3.Row
+        db_cursor = conn.cursor()
         db_cursor.execute("""
         select
             c.id,
@@ -44,13 +89,10 @@ def get_customers_by_email(email):
         from Customer c
         WHERE c.email = ?
         """, (email, ))
-
         customers = []
         dataset = db_cursor.fetchall()
-
         for row in dataset:
             customer = Customer(
                 row['id'], row['name'], row['address'], row['email'], row['password'])
             customers.append(customer.__dict__)
-
     return json.dumps(customers)
